@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fleix · fleix Console</title>
+    <style>
+      :root { color-scheme: dark; }
+      body { font-family: Inter, system-ui, sans-serif; margin: 0; background: #0b1020; color: #eef2ff; }
+      .app { max-width: 900px; margin: 0 auto; padding: 24px; }
+      h1 { margin: 0 0 8px; font-size: 1.5rem; }
+      .muted { color: #a5b4fc; margin-bottom: 16px; }
+      .chat { background: #121a33; border: 1px solid #273158; border-radius: 12px; height: 60vh; overflow: auto; padding: 14px; }
+      .msg { margin: 10px 0; line-height: 1.45; }
+      .user { color: #93c5fd; }
+      .bot { color: #d1fae5; white-space: pre-wrap; }
+      form { margin-top: 16px; display: flex; gap: 10px; }
+      input { flex: 1; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; padding: 10px 12px; }
+      button { border: 0; border-radius: 10px; padding: 10px 16px; background: #6366f1; color: white; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <h1>fleix · Autonomous Learning System</h1>
+      <p class="muted">Creator: Mr Gray · Purpose: autonomous learning system</p>
+      <section id="chat" class="chat"></section>
+      <form id="form">
+        <input id="input" placeholder="Ask fleix anything..." required />
+        <button type="submit">Send</button>
+      </form>
+    </main>
+    <script>
+      const chat = document.getElementById('chat');
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+
+      const append = (text, cls) => {
+        const div = document.createElement('div');
+        div.className = `msg ${cls}`;
+        div.textContent = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        return div;
+      };
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = input.value.trim();
+        if (!query) return;
+        append(`You: ${query}`, 'user');
+        input.value = '';
+        const botNode = append('fleix: ', 'bot');
+
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+
+        if (!res.body) {
+          botNode.textContent += '\n[No stream available]';
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          botNode.textContent += decoder.decode(value, { stream: true });
+          chat.scrollTop = chat.scrollHeight;
+        }
+      });
+    </script>
+  </body>
+</html>
