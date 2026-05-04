@@ -25,7 +25,7 @@
       <p class="muted">Creator: Mr Gray · Purpose: autonomous learning system</p>
       <section id="chat" class="chat"></section>
       <form id="form">
-        <input id="input" placeholder="Ask fleix anything..." required />
+        <input id="input" placeholder="Ask Nash anything..." required />
         <button type="submit">Send</button>
       </form>
     </main>
@@ -49,7 +49,7 @@
         if (!query) return;
         append(`You: ${query}`, 'user');
         input.value = '';
-        const botNode = append('fleix: ', 'bot');
+        const botNode = append('Nash: ', 'bot');
 
         const res = await fetch('/chat', {
           method: 'POST',
