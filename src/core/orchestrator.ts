@@ -36,12 +36,17 @@ export async function runOrchestrator(query: string): Promise<OrchestratorResult
   const hits = await searchMemory(embedding);
   let confidence = calculateConfidence(hits);
 
-  const plan = await planner(query);
+  let answer = '';
+  if (hits.length && confidence >= 0.45) {
+    answer = hits.slice(0, 3).map((h) => h.content).join('\n---\n');
+    confidence = Math.max(confidence, 0.62);
+  }
+
+  const plan = answer ? [] : await planner(query);
   const outputs: string[] = [];
   for (const step of plan) outputs.push(await runTool(step));
 
-  let answer = outputs.join('\n').trim();
-  if (!answer && hits.length) answer = hits.slice(0, 3).map((h) => h.content).join('\n---\n');
+  if (!answer) answer = outputs.join('\n').trim();
 
   if (confidence < 0.6 || !answer) {
     const teacher = await askTeacher(`User query: ${query}\nKnown context:${answer || 'none'}`);
